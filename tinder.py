@@ -44,30 +44,32 @@ class Tinder:
         print('total matches:',self.Statistics.matches_count(self))
         print('avg total matches:',self.Statistics.average_matches(self))
 
-    def __init__(self, males=10, females=10,male_likes = 10, female_likes = 10) -> None:
+    def __init__(self, males=10, females=10, male_likes=10, female_likes=10) -> None:
         """
         Initialize a Tinder object.
 
         Parameters:
-        - pool (int): The number of users to create in the Tinder pool.
+        - males (int): The number of male users to create in the Tinder pool. Default is 10.
+        - females (int): The number of female users to create in the Tinder pool. Default is 10.
+        - male_likes (int): The number of likes each male user starts with. Default is 10.
+        - female_likes (int): The number of likes each female user starts with. Default is 10.
 
         Returns:
         None
         """
-        self.users: dict[str, list[Person]] = {'m': [], 'f': []}
-        for _ in range(females):
-            self.users['f'].append(Person(get_full_name(gender='female'),
-                                          remaining_likes=male_likes,
-                                          attractiveness=random.random(),
-                                          like_probability=0.25,
-                                          gender='f'))
-
-        for _ in range(males):
-            self.users['m'].append(Person(get_full_name(gender='male'),
-                                          remaining_likes=female_likes,
-                                          attractiveness=random.random(),
-                                          like_probability=0.25,
-                                          gender='m'))
+        self.users: dict[str, list[Person]] = {
+            'f': [Person(get_full_name(gender='female'),
+                         remaining_likes=male_likes,
+                         attractiveness=random.random(),
+                         like_probability=0.25,
+                         gender='f') for _ in range(females)],
+                         
+            'm': [Person(get_full_name(gender='male'),
+                         remaining_likes=female_likes,
+                         attractiveness=random.random(),
+                         like_probability=0.25,
+                         gender='m') for _ in range(males)]
+        }
 
         self.matches = pd.DataFrame(index=sorted(self.users['m']),
                                     columns=sorted(self.users['f']))
@@ -88,36 +90,9 @@ class Tinder:
         for m in self.users['m']:
             m.swipe(self.users['f'])
 
-    def get_match(self):
-        """
-        Calculate the matches between users.
-
-        Parameters:
-        None
-
-        Returns:
-        None
-        """
-        for people in self.users.values():
-            for p in people:
-                # self.matches.loc[p,p] = 0
-                for other in p.liked_people:
-                    if p in other.liked_people:
-                        p.match.add(other)
-                        other.match.add(p)
-
-                        if p.gender == 'm':
-                            self.matches.loc[p, other] = 1
-                        elif p.gender == 'f':
-                            self.matches.loc[other, p] = 1
-
-
 
 if __name__ == "__main__":
     tinder = Tinder(males=500, females=500,
                     male_likes=100,female_likes=100)
     tinder.daily_swipe()
-    tinder.get_match()
-    #print(tinder.matches)
-    #print(tinder.users)
     tinder.call_statistics()
